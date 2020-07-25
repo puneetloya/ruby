@@ -18,6 +18,7 @@ ENV RUBY_DOWNLOAD_SHA256 5db187882b7ac34016cd48d7032e197f07e4968f406b0690e20193b
 # some of ruby's build scripts are written in ruby
 #   we purge system ruby later to make sure our final image uses what we just built
 # readline-dev vs libedit-dev: https://bugs.ruby-lang.org/issues/11869 and https://github.com/docker-library/ruby/issues/75
+ENV LD_PRELOAD=/usr/local/lib/libjemalloc.so.2
 RUN set -eux; \
 	\
 	apk add --no-cache --virtual .ruby-builddeps \
@@ -47,9 +48,13 @@ RUN set -eux; \
 		xz \
 		yaml-dev \
 		zlib-dev \
-		jemalloc-dev \
 	; \
 	\
+	wget -O - https://github.com/jemalloc/jemalloc/releases/download/5.2.1/jemalloc-5.2.1.tar.bz2 | tar -xj && \
+    cd jemalloc-5.2.1 && \
+    ./configure && \
+    make && \
+    make install && \
 	wget -O ruby.tar.xz "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR%-rc}/ruby-$RUBY_VERSION.tar.xz"; \
 	echo "$RUBY_DOWNLOAD_SHA256 *ruby.tar.xz" | sha256sum --check --strict; \
 	\
